@@ -29,24 +29,24 @@ from the command line or an uncommitted developer alias.
 (require '[bevis.challenge :as challenge]
          '[bevis.session :as session]
          '[bevis.ring :as auth-ring]
-         '[your-app.auth-store :as auth-store]) ; application-owned persistence
+         '[bevis.store :as store])
 
 (defn issue-magic-link!
-  [db {:keys [account-id email public-url send-login-link!]}]
+  [auth-store {:keys [account-id email public-url send-login-link!]}]
   (let [{:keys [record proof]}
         (challenge/issue {:method :magic-link
                           :identity {:account-id account-id}
                           :ttl (java.time.Duration/ofMinutes 15)
                           :metadata {:return-path "/konto"}})]
-    (auth-store/insert-challenge! db record)
+    (store/insert-challenge! auth-store record)
     ;; The application constructs and sends its own URL/email.
     (send-login-link! email (str public-url "/auth/verify?token=" proof))))
 
 (defn verify-magic-link!
-  [db {:keys [token now]}]
+  [auth-store {:keys [token now]}]
   ;; The store performs lookup + decision + transition under one lock/CAS.
-  (let [result (auth-store/verify-challenge!
-                db
+  (let [result (store/verify-challenge!
+                auth-store
                 {:selector (challenge/selector {:method :magic-link
                                                  :proof token})
                  :method :magic-link
@@ -57,7 +57,7 @@ from the command line or an uncommitted developer alias.
             (session/issue {:subject (get-in result [:challenge :identity])
                             :now now
                             :ttl (java.time.Duration/ofHours 12)})]
-        (auth-store/insert-session! db record)
+        (store/insert-session! auth-store record)
         {:set-cookie
          (auth-ring/session-cookie {:name "__Host-example_session"
                                     :value credential
@@ -71,22 +71,22 @@ record. A verified result contains a sanitized challenge and no proof hash.
 
 ```clojure
 (require '[bevis.challenge :as challenge]
-         '[your-app.auth-store :as auth-store]) ; application-owned persistence
+         '[bevis.store :as store])
 
 (defn issue-code!
-  [db {:keys [identity destination otp-hmac-key send-code!]}]
+  [auth-store {:keys [identity destination otp-hmac-key send-code!]}]
   (let [{:keys [record proof]}
         (challenge/issue {:method :code
                           :identity identity
                           :hash-key otp-hmac-key})]
-    (auth-store/insert-challenge! db record)
+    (store/insert-challenge! auth-store record)
     (send-code! destination proof)
     {:challenge-id (:id record)}))
 
 (defn verify-code!
-  [db {:keys [challenge-id submitted-code otp-hmac-key now]}]
-  (auth-store/verify-challenge!
-   db
+  [auth-store {:keys [challenge-id submitted-code otp-hmac-key now]}]
+  (store/verify-challenge!
+   auth-store
    {:selector (challenge/selector {:method :code :id challenge-id})
     :method :code
     :proof submitted-code
@@ -102,12 +102,12 @@ attempts under the same lock/CAS used for successful consumption.
 
 ```clojure
 (require '[bevis.session :as session]
-         '[your-app.auth-store :as auth-store]) ; application-owned persistence
+         '[bevis.store :as store])
 
 (defn authenticated-subject
-  [db cookie-value now]
-  (let [stored (auth-store/find-session
-                db
+  [auth-store cookie-value now]
+  (let [stored (store/find-session
+                auth-store
                 (session/credential-hash-candidates cookie-value))
         result (session/check stored {:now now})]
     (case (:status result)
@@ -120,11 +120,10 @@ attempts under the same lock/CAS used for successful consumption.
 `credential-hash-candidates` includes the 0.1 versioned digest and the legacy
 64-character SHA-256 hex digest used by initial Radar consumers.
 
-## Adapter conformance
+## Store conformance
 
-Normal application code calls its persistence namespace directly, as above.
-For conformance tests only, that namespace exposes the required operations as
-an adapter map so Bevis can exercise the same implementation generically:
+An application implements the seven methods in `bevis.store/AuthStore`.
+Normal application code and the conformance suite call the same protocol:
 
 ```clojure
 (require '[bevis.conformance :as auth-test]
@@ -132,23 +131,24 @@ an adapter map so Bevis can exercise the same implementation generically:
 
 (defn assert-auth-store-conformance!
   [db identity subject]
-  (let [adapter (assoc (auth-store/adapter db)
-                       :conformance/identity identity
-                       :conformance/subject subject)]
-    (auth-test/assert-challenge-store adapter)
-    (auth-test/assert-session-store adapter)))
+  (let [store (auth-store/postgres-store db)]
+    (auth-test/assert-challenge-store store {:identity identity})
+    (auth-test/assert-session-store store {:subject subject})))
 ```
 
 See [DESIGN.md](DESIGN.md) for the exact operation contract and
-[SECURITY.md](SECURITY.md) for the threat model.
+[SECURITY.md](SECURITY.md) for the threat model. Complete, tested
+copy-and-adjust implementations for [PostgreSQL and SQLite](examples/README.md)
+include schema, row conversion, atomic verification, and transaction patterns.
 
 ## Public namespaces
 
 - `bevis.secret` — generated credentials, versioned hashes, compatibility hashes.
 - `bevis.challenge` — issue, select, verify, and apply explicit transitions.
 - `bevis.session` — issue and classify persisted sessions.
+- `bevis.store` — the explicit seven-operation persistence protocol.
 - `bevis.policy` — a small issuance-count decision primitive.
 - `bevis.ring` — Set-Cookie values and conservative local return paths.
-- `bevis.conformance` — reusable persistence-adapter assertions.
+- `bevis.conformance` — reusable AuthStore assertions.
 
 Run the suite with `clojure -M:test`.

@@ -69,16 +69,20 @@ never returns the credential hash in its public session.
 
 ## Persistence contract
 
-Adapters are maps of functions. Protocols add no useful dispatch here and
-would make transaction ownership less visible.
+Persistence implementations satisfy the explicit `bevis.store/AuthStore`
+protocol. One store value implements seven invariant-oriented operations; the
+contract is not a generic CRUD abstraction.
 
 Challenge operations:
 
 ```clojure
-{:insert-challenge! (fn [record] ...)
- :load-challenge    (fn [id] ...)
- :verify-challenge! (fn [{:keys [selector method proof now hash-key]}] ...)}
+(insert-challenge! [store challenge])
+(load-challenge [store challenge-id])
+(verify-challenge! [store {:keys [selector method proof now hash-key]}])
 ```
+
+Insertion returns the stored challenge. Loading returns the complete persisted
+record or `nil`. Verification returns a `bevis.challenge/verify` result.
 
 `verify-challenge!` must atomically:
 
@@ -96,26 +100,41 @@ not. Missing selectors return `{:status :invalid-proof}`.
 Session operations:
 
 ```clojure
-{:insert-session! (fn [record] ...)
- :find-session     (fn [credential-hash-candidates] ...)
- :load-session     (fn [id] ...)
- :revoke-session!  (fn [id now] ...)}
+(insert-session! [store session])
+(find-session [store credential-hash-candidates])
+(load-session [store session-id])
+(revoke-session! [store session-id revoked-at])
 ```
+
+Insertion returns the stored session. Both lookup operations return a complete
+persisted record or `nil`. Revocation returns `true` when the session exists,
+including an already-revoked session, and `false` when it does not.
 
 `find-session` returns the persisted record even if expired/revoked so
 `session/check` can classify it. `revoke-session!` must make revocation visible
-to subsequent lookups before it returns. Deletion is a conforming revocation
-strategy, though retaining `revoked-at` is better for auditability.
+to subsequent lookups before it returns. The record is retained so later
+lookups can distinguish `:revoked-session` from `:invalid-session`.
 
 The load operations are included because code verification and conformance
 need current state; they are not an invitation to build generic CRUD.
 
+The protocol does not own connections or transactions. A store may wrap a
+datasource and open the atomic verification transaction itself, or wrap an
+existing transaction when authentication and application changes must commit
+together. The PostgreSQL example demonstrates both forms. This keeps
+transaction ownership visible without weakening the persistence contract.
+
 `bevis.conformance/assert-challenge-store` races two consumers, checks exact
 expiry, proof-at-rest, code attempts/lockout, success consumption, and replay.
 `assert-session-store` checks hash-at-rest, invalid/active/expired status and
-revocation visibility. Adapters backed by foreign keys may supply
-`:conformance/identity` and `:conformance/subject` values created by their test
-fixture; otherwise the suite generates opaque defaults.
+revocation visibility. Stores backed by foreign keys pass `{:identity value}`
+and `{:subject value}` options created by their test fixture; otherwise the
+suite generates opaque defaults.
+
+Complete copy-and-adjust patterns live under `examples/`: PostgreSQL uses a
+transaction plus `SELECT ... FOR UPDATE`, while SQLite uses guarded updates and
+retries a lost compare-and-set. The examples are tested, but remain application
+templates so Bevis itself does not acquire JDBC or database-driver dependencies.
 
 ## Time and errors
 

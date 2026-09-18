@@ -43,17 +43,17 @@ schema and rollout notes.
 
 ## Pilot API review
 
-The first relational adapter exposed one necessary testing seam: conformance
+The first relational store exposed one necessary testing seam: conformance
 cannot invent an identity when the challenge/session tables enforce an account
-foreign key. Adapters may therefore provide `:conformance/identity` and
-`:conformance/subject` fixture values. This is test data, not a runtime domain
+foreign key. Tests therefore pass `{:identity value}` and `{:subject value}`
+options to the conformance functions. This is test data, not a runtime domain
 hook.
 
-No application-specific runtime escape hatch was needed. Byggeradar keeps a
-small in-transaction adapter entry point so challenge consumption and session
+No application-specific runtime escape hatch was needed. Byggeradar constructs
+its `AuthStore` around an open transaction so challenge consumption and session
 insert share its existing transaction; that is an implementation of the same
 contract, not a broader core API. JDBC `Timestamp`/`Instant` conversion also
-stays in the adapter.
+stays in the store implementation.
 
 The persistence contract proved appropriately narrow: verification is the only
 challenge state transition operation, while application tables and email

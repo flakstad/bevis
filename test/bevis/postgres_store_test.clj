@@ -1,0 +1,19 @@
+(ns bevis.postgres-store-test
+  (:require
+   [bevis.conformance :as conformance]
+   [bevis.examples.postgres-store :as postgres-store]
+   [clojure.test :refer [deftest is]]
+   [next.jdbc :as jdbc]))
+
+(def ^:private test-url
+  (System/getenv "BEVIS_TEST_POSTGRES_URL"))
+
+(deftest ^:integration postgres-pattern-obeys-store-contract
+  (if-not test-url
+    (is true "Set BEVIS_TEST_POSTGRES_URL to run the PostgreSQL pattern test")
+    (let [datasource (jdbc/get-datasource {:jdbcUrl test-url})]
+      (postgres-store/create-schema! datasource)
+      (jdbc/execute! datasource ["TRUNCATE auth_sessions, auth_challenges"])
+      (let [auth-store (postgres-store/postgres-store datasource)]
+        (is (true? (conformance/assert-challenge-store auth-store)))
+        (is (true? (conformance/assert-session-store auth-store)))))))

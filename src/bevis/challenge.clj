@@ -53,7 +53,7 @@
      :proof proof}))
 
 (defn selector
-  "Builds the non-plaintext lookup selector expected by a persistence adapter."
+  "Builds the non-plaintext lookup selector expected by an AuthStore."
   [{:keys [method id proof]}]
   (case method
     :magic-link {:method method
@@ -66,7 +66,7 @@
   (dissoc record :proof-hash))
 
 (defn apply-transition
-  "Applies a transition returned by verify. Persistence adapters use this only
+  "Applies a transition returned by verify. Store implementations use this only
   while holding their lock or compare-and-set guard."
   [record {:keys [transition]}]
   (case (:op transition)
@@ -79,7 +79,7 @@
 (defn verify
   "Returns a result and requested state transition without mutating storage.
 
-  The adapter must evaluate this function and apply :transition under one row
+  The store must evaluate this function and apply :transition under one row
   lock or compare-and-set operation. The result never contains proof material."
   [record {:keys [method proof hash-key] :as options}]
   (let [now (time/now options)
