@@ -1,4 +1,4 @@
-(ns authn.secret
+(ns bevis.secret
   (:require [clojure.string :as str])
   (:import
    (java.nio.charset StandardCharsets)

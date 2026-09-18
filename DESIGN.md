@@ -84,8 +84,8 @@ Challenge operations:
 
 1. select the current row using `selector`;
 2. lock it or establish an equivalent compare-and-set guard;
-3. call `authn.challenge/verify` with the current record;
-4. apply `authn.challenge/apply-transition`;
+3. call `bevis.challenge/verify` with the current record;
+4. apply `bevis.challenge/apply-transition`;
 5. persist that transition and return the original result.
 
 It must not commit a transition if its guard no longer matches. A PostgreSQL
@@ -110,7 +110,7 @@ strategy, though retaining `revoked-at` is better for auditability.
 The load operations are included because code verification and conformance
 need current state; they are not an invitation to build generic CRUD.
 
-`authn.conformance/assert-challenge-store` races two consumers, checks exact
+`bevis.conformance/assert-challenge-store` races two consumers, checks exact
 expiry, proof-at-rest, code attempts/lockout, success consumption, and replay.
 `assert-session-store` checks hash-at-rest, invalid/active/expired status and
 revocation visibility. Adapters backed by foreign keys may supply
@@ -130,14 +130,14 @@ configuration and programmer errors throw `ExceptionInfo`.
 
 The chosen boundary combines durable consumer counts with a pure core decision.
 Adapters/applications expose recent counts by identity and client key;
-`authn.policy/issuance-decision` compares them with explicit limits. The
+`bevis.policy/issuance-decision` compares them with explicit limits. The
 consumer owns transaction isolation, response policy, and key derivation. A
 callback-based generic rate limiter was rejected because it would hide storage
 and distributed consistency without actually solving either.
 
 ## Dependencies and extension policy
 
-Core uses only Clojure and JDK crypto/time. `authn.ring` emits header values but
+Core uses only Clojure and JDK crypto/time. `bevis.ring` emits header values but
 does not depend on Ring. New proof methods should be added only when at least
 one real consumer demonstrates distinct generation/verification semantics.
 Application-specific metadata remains opaque rather than becoming callbacks or

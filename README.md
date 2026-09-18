@@ -1,6 +1,6 @@
-# authn-core
+# bevis
 
-`authn-core` 0.1.0 is a small, storage-agnostic Clojure library for
+`bevis` 0.1.0 is a small, storage-agnostic Clojure library for
 passwordless authentication:
 
 ```text
@@ -15,8 +15,8 @@ Version 0.1.x is a pilot API. Pin consumers to a full Git commit, not a branch:
 
 ```clojure
 {:deps
- {io.github.flakstad/authn-core
-  {:git/url "https://github.com/flakstad/authn-core.git"
+ {io.github.flakstad/bevis
+  {:git/url "https://github.com/flakstad/bevis.git"
    :git/sha "<full-40-character-sha>"}}}
 ```
 
@@ -26,9 +26,9 @@ from the command line or an uncommitted developer alias.
 ## Magic-link flow
 
 ```clojure
-(require '[authn.challenge :as challenge]
-         '[authn.session :as session]
-         '[authn.ring :as auth-ring])
+(require '[bevis.challenge :as challenge]
+         '[bevis.session :as session]
+         '[bevis.ring :as auth-ring])
 
 (let [{:keys [record proof]}
       (challenge/issue {:method :magic-link
@@ -118,11 +118,11 @@ See [DESIGN.md](DESIGN.md) for the exact operation contract and
 
 ## Public namespaces
 
-- `authn.secret` — generated credentials, versioned hashes, compatibility hashes.
-- `authn.challenge` — issue, select, verify, and apply explicit transitions.
-- `authn.session` — issue and classify persisted sessions.
-- `authn.policy` — a small issuance-count decision primitive.
-- `authn.ring` — Set-Cookie values and conservative local return paths.
-- `authn.conformance` — reusable persistence-adapter assertions.
+- `bevis.secret` — generated credentials, versioned hashes, compatibility hashes.
+- `bevis.challenge` — issue, select, verify, and apply explicit transitions.
+- `bevis.session` — issue and classify persisted sessions.
+- `bevis.policy` — a small issuance-count decision primitive.
+- `bevis.ring` — Set-Cookie values and conservative local return paths.
+- `bevis.conformance` — reusable persistence-adapter assertions.
 
 Run the suite with `clojure -M:test`.

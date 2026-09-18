@@ -1,5 +1,5 @@
-(ns authn.session-test
-  (:require [authn.session :as session]
+(ns bevis.session-test
+  (:require [bevis.session :as session]
             [clojure.test :refer [deftest is]])
   (:import (java.time Duration Instant)))
 

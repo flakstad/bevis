@@ -1,7 +1,7 @@
-(ns authn.challenge
+(ns bevis.challenge
   (:require
-   [authn.secret :as secret]
-   [authn.time :as time])
+   [bevis.secret :as secret]
+   [bevis.time :as time])
   (:import
    (java.time Duration)
    (java.util UUID)))

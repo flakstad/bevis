@@ -1,5 +1,5 @@
-(ns authn.challenge-test
-  (:require [authn.challenge :as challenge]
+(ns bevis.challenge-test
+  (:require [bevis.challenge :as challenge]
             [clojure.test :refer [deftest is]])
   (:import (java.time Clock Duration Instant ZoneOffset)))
 

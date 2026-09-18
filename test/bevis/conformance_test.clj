@@ -1,6 +1,6 @@
-(ns authn.conformance-test
-  (:require [authn.conformance :as conformance]
-            [authn.test-support :as support]
+(ns bevis.conformance-test
+  (:require [bevis.conformance :as conformance]
+            [bevis.test-support :as support]
             [clojure.test :refer [deftest]]))
 
 (deftest in-memory-adapter-obeys-challenge-contract

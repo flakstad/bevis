@@ -2,4 +2,4 @@
  :deps {org.clojure/clojure {:mvn/version "1.12.5"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :main-opts ["-m" "authn.test-runner"]}}}
+         :main-opts ["-m" "bevis.test-runner"]}}}

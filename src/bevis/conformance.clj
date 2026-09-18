@@ -1,18 +1,18 @@
-(ns authn.conformance
+(ns bevis.conformance
   "Reusable behavioral assertions for application persistence adapters.
 
   These functions intentionally use clojure.test so a consumer can call them
   from its ordinary test suite without copying fixtures."
   (:require
-   [authn.challenge :as challenge]
-   [authn.session :as session]
+   [bevis.challenge :as challenge]
+   [bevis.session :as session]
    [clojure.test :refer [is testing]])
   (:import
    (java.time Duration Instant)
    (java.util UUID)))
 
 (def ^:private code-hash-key
-  "authn-core-conformance-only-key-32-bytes")
+  "bevis-conformance-only-key-32-bytes")
 
 (defn assert-challenge-store
   "Exercises a challenge adapter.
@@ -22,7 +22,7 @@
   :load-challenge     (fn [id])
   :verify-challenge!  (fn [{:keys [selector method proof now hash-key]}])
 
-  verify-challenge! must select, decide with authn.challenge/verify, and apply
+  verify-challenge! must select, decide with bevis.challenge/verify, and apply
   its transition in one row lock or CAS operation. It returns the verify result."
   [{:keys [insert-challenge! load-challenge verify-challenge!] :as adapter}]
   (doseq [operation [:insert-challenge! :load-challenge :verify-challenge!]]

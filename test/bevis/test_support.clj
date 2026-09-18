@@ -1,5 +1,5 @@
-(ns authn.test-support
-  (:require [authn.challenge :as challenge]))
+(ns bevis.test-support
+  (:require [bevis.challenge :as challenge]))
 
 (defn memory-adapter
   []

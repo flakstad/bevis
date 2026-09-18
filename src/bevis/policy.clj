@@ -1,4 +1,4 @@
-(ns authn.policy)
+(ns bevis.policy)
 
 (def recommended-identity-limit 5)
 (def recommended-client-limit 20)

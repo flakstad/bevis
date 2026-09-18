@@ -1,4 +1,4 @@
-(ns authn.time
+(ns bevis.time
   (:import
    (java.time Clock Duration Instant)))
 
