@@ -28,7 +28,8 @@
   (doseq [operation [:insert-challenge! :load-challenge :verify-challenge!]]
     (is (fn? (get adapter operation)) (str "adapter provides " operation)))
   (let [now (Instant/parse "2030-01-01T10:00:00Z")
-        identity {:kind :conformance :id (str (UUID/randomUUID))}]
+        identity (or (:conformance/identity adapter)
+                     {:kind :conformance :id (str (UUID/randomUUID))})]
     (testing "magic links are hashed, expiring, atomic, and one-time"
       (let [{:keys [record proof]}
             (challenge/issue {:method :magic-link
@@ -127,7 +128,8 @@
     (is (fn? (get adapter operation)) (str "adapter provides " operation)))
   (let [now (Instant/parse "2030-01-01T10:00:00Z")
         {:keys [record credential]}
-        (session/issue {:subject {:kind :conformance :id (str (UUID/randomUUID))}
+        (session/issue {:subject (or (:conformance/subject adapter)
+                                    {:kind :conformance :id (str (UUID/randomUUID))})
                         :now now :ttl (Duration/ofHours 1)})]
     (insert-session! record)
     (let [stored (load-session (:id record))]

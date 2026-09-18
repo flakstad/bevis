@@ -105,8 +105,12 @@ Consumers run the shipped assertions against their real adapter:
 
 ```clojure
 (deftest auth-store-conforms
-  (auth-test/assert-challenge-store (postgres-adapter test-ds))
-  (auth-test/assert-session-store (postgres-adapter test-ds)))
+  (let [account (create-test-account! test-ds)
+        adapter (assoc (postgres-adapter test-ds)
+                       :conformance/identity {:account-id (:id account)}
+                       :conformance/subject {:account-id (:id account)})]
+    (auth-test/assert-challenge-store adapter)
+    (auth-test/assert-session-store adapter)))
 ```
 
 See [DESIGN.md](DESIGN.md) for the exact operation contract and

@@ -113,7 +113,9 @@ need current state; they are not an invitation to build generic CRUD.
 `authn.conformance/assert-challenge-store` races two consumers, checks exact
 expiry, proof-at-rest, code attempts/lockout, success consumption, and replay.
 `assert-session-store` checks hash-at-rest, invalid/active/expired status and
-revocation visibility.
+revocation visibility. Adapters backed by foreign keys may supply
+`:conformance/identity` and `:conformance/subject` values created by their test
+fixture; otherwise the suite generates opaque defaults.
 
 ## Time and errors
 
