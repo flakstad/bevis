@@ -1,6 +1,6 @@
 # bevis
 
-`bevis` 0.1.0 is a small, storage-agnostic Clojure library for
+`bevis` 0.2.0 is a small, storage-agnostic Clojure library for
 passwordless authentication:
 
 ```text
@@ -11,7 +11,7 @@ It supports high-entropy magic-link proofs and numeric one-time codes without
 owning users, authorization, routes, email, UI, or a database. Its API is plain
 functions over plain maps. Clojure and the JDK are its only dependencies.
 
-Version 0.1.x is a pilot API. Pin consumers to a full Git commit, not a branch:
+Version 0.x is a pilot API. Pin consumers to a full Git commit, not a branch:
 
 ```clojure
 {:deps

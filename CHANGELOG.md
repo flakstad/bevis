@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-09-18
 
 - Replace the function-map persistence boundary with `bevis.store/AuthStore`.
 - Add tested copy-and-adjust PostgreSQL and SQLite store patterns.
