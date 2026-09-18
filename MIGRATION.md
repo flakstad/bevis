@@ -34,6 +34,33 @@ without a session record. The migration may invalidate outstanding legacy
 links; active legacy sessions should remain readable. Add identity and client
 issuance counts without changing email/account semantics.
 
+The completed pilot kept both forms of legacy state readable: the adapter
+queries the versioned and legacy SHA-256 digest for outstanding links and
+sessions. New rows write only versioned hashes. Logout now records revocation,
+and rate-limited issuance returns the existing generic success page without
+sending mail. See Byggeradar's `docs/authn-core-migration.md` for its exact
+schema and rollout notes.
+
+## Pilot API review
+
+The first relational adapter exposed one necessary testing seam: conformance
+cannot invent an identity when the challenge/session tables enforce an account
+foreign key. Adapters may therefore provide `:conformance/identity` and
+`:conformance/subject` fixture values. This is test data, not a runtime domain
+hook.
+
+No application-specific runtime escape hatch was needed. Byggeradar keeps a
+small in-transaction adapter entry point so challenge consumption and session
+insert share its existing transaction; that is an implementation of the same
+contract, not a broader core API. JDBC `Timestamp`/`Instant` conversion also
+stays in the adapter.
+
+The persistence contract proved appropriately narrow: verification is the only
+challenge state transition operation, while application tables and email
+association remain outside. The Ring namespace remains limited to cookie and
+return-path values. OTP used the same real PostgreSQL adapter and conformance
+suite naturally, although Byggeradar exposes no OTP route or UI.
+
 ## Fiskeriradar follow-up (do not implement in this pilot)
 
 Current implementation: `src/fiskeriradar/auth.clj` uses PostgreSQL/next.jdbc,
